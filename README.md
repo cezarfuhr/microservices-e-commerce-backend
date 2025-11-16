@@ -1,6 +1,37 @@
 # Microservices E-commerce Backend
 
+[![CI/CD Pipeline](https://github.com/cezarfuhr/microservices-e-commerce-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/cezarfuhr/microservices-e-commerce-backend/actions/workflows/ci.yml)
+[![Kotlin](https://img.shields.io/badge/Kotlin-1.9.20-blue.svg)](https://kotlinlang.org)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Backend em microsserviços escalável e resiliente para e-commerce, desenvolvido com Kotlin, Spring Boot, RabbitMQ e Docker.
+
+## 🚀 Quick Start
+
+```bash
+# Clone o repositório
+git clone https://github.com/cezarfuhr/microservices-e-commerce-backend.git
+cd microservices-e-commerce-backend
+
+# Execute o script de demonstração automatizada
+./scripts/demo.sh
+```
+
+O script irá:
+- ✅ Iniciar todos os serviços com Docker Compose
+- ✅ Criar produtos de exemplo
+- ✅ Registrar um usuário
+- ✅ Fazer login e gerar JWT
+- ✅ Criar um pedido completo
+- ✅ Demonstrar comunicação via eventos RabbitMQ
+
+## 📊 Diagrama de Arquitetura
+
+![Arquitetura de Microsserviços](docs/architecture-diagram.png)
+
+Para documentação detalhada da arquitetura, veja [ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Arquitetura
 
@@ -71,14 +102,29 @@ Este projeto implementa uma arquitetura de microsserviços com os seguintes comp
 
 ## Como Executar
 
-### 1. Clone o repositório
+### Opção 1: Demo Automatizada (Recomendado)
 
 ```bash
-git clone <repository-url>
+# Execute o script de demonstração
+./scripts/demo.sh
+```
+
+O script irá automaticamente:
+1. Iniciar todos os serviços
+2. Aguardar todos ficarem saudáveis
+3. Criar produtos, usuários e pedidos de exemplo
+4. Demonstrar a integração completa
+
+### Opção 2: Execução Manual
+
+#### 1. Clone o repositório
+
+```bash
+git clone https://github.com/cezarfuhr/microservices-e-commerce-backend.git
 cd microservices-e-commerce-backend
 ```
 
-### 2. Inicie todos os serviços com Docker Compose
+#### 2. Inicie todos os serviços com Docker Compose
 
 ```bash
 docker-compose up -d
@@ -90,7 +136,7 @@ Este comando irá:
 - Construir e iniciar todos os microsserviços
 - Configurar a rede e volumes
 
-### 3. Aguarde todos os serviços iniciarem
+#### 3. Aguarde todos os serviços iniciarem
 
 ```bash
 docker-compose ps
@@ -98,7 +144,7 @@ docker-compose ps
 
 Todos os serviços devem estar com status "Up (healthy)".
 
-### 4. Acesse os serviços
+#### 4. Acesse os serviços
 
 - **API Gateway**: http://localhost:8080
 - **RabbitMQ Management**: http://localhost:15672 (guest/guest)
@@ -199,6 +245,33 @@ Os serviços se comunicam via eventos assíncronos:
 - **Notifications Service** - Escuta todos os eventos e envia notificações
 - **Analytics Service** - Escuta todos os eventos e coleta métricas
 
+## 🧪 Testes
+
+O projeto possui testes unitários e de integração para todos os serviços principais.
+
+### Executar testes
+
+```bash
+# Todos os testes de um serviço
+cd products-service
+./gradlew test
+
+# Com relatório de cobertura
+./gradlew test jacocoTestReport
+
+# Testes de integração via CI
+docker-compose up -d
+./gradlew test
+```
+
+### CI/CD
+
+O projeto usa GitHub Actions para:
+- ✅ Executar testes unitários em cada push
+- ✅ Build de imagens Docker
+- ✅ Testes de integração com Docker Compose
+- ✅ Verificação de qualidade de código
+
 ## Desenvolvimento Local
 
 ### Executar serviço individual
@@ -206,17 +279,6 @@ Os serviços se comunicam via eventos assíncronos:
 ```bash
 cd products-service
 ./gradlew bootRun
-```
-
-### Executar testes
-
-```bash
-# Todos os testes
-./gradlew test
-
-# Testes de um serviço específico
-cd products-service
-./gradlew test
 ```
 
 ### Build
@@ -240,6 +302,12 @@ cd products-service
 ├── orders-service/          # Serviço de Pedidos
 ├── notifications-service/   # Serviço de Notificações
 ├── analytics-service/       # Serviço de Analytics
+├── docs/                    # Documentação
+│   └── ARCHITECTURE.md      # Arquitetura detalhada
+├── scripts/                 # Scripts utilitários
+│   └── demo.sh             # Script de demonstração
+├── .github/workflows/       # GitHub Actions CI/CD
+│   └── ci.yml              # Pipeline de CI/CD
 ├── docker-compose.yml       # Orquestração de containers
 ├── init-databases.sql       # Script de inicialização dos bancos
 └── README.md               # Esta documentação

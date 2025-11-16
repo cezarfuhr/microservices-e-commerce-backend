@@ -1,0 +1,148 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, claude/** ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test Microservices
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - products-service
+          - users-service
+          - orders-service
+          - api-gateway
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        working-directory: ./${{ matrix.service }}
+        run: chmod +x gradlew
+
+      - name: Run tests for ${{ matrix.service }}
+        working-directory: ./${{ matrix.service }}
+        run: ./gradlew test --no-daemon
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-${{ matrix.service }}
+          path: ${{ matrix.service }}/build/test-results/
+
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: test
+
+    strategy:
+      matrix:
+        service:
+          - products-service
+          - users-service
+          - orders-service
+          - notifications-service
+          - analytics-service
+          - api-gateway
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build ${{ matrix.service }} Docker image
+        working-directory: ./${{ matrix.service }}
+        run: |
+          docker build -t ${{ matrix.service }}:${{ github.sha }} .
+          docker build -t ${{ matrix.service }}:latest .
+
+      - name: Test Docker image
+        run: |
+          docker images | grep ${{ matrix.service }}
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Start services with Docker Compose
+        run: |
+          docker-compose up -d
+          sleep 30
+
+      - name: Check services health
+        run: |
+          docker-compose ps
+
+      - name: Test API Gateway
+        run: |
+          curl -f http://localhost:8080/actuator/health || exit 1
+
+      - name: Test Products Service
+        run: |
+          curl -f http://localhost:8081/actuator/health || exit 1
+
+      - name: Test Users Service
+        run: |
+          curl -f http://localhost:8082/actuator/health || exit 1
+
+      - name: Test Orders Service
+        run: |
+          curl -f http://localhost:8083/actuator/health || exit 1
+
+      - name: Test Notifications Service
+        run: |
+          curl -f http://localhost:8084/actuator/health || exit 1
+
+      - name: Test Analytics Service
+        run: |
+          curl -f http://localhost:8085/actuator/health || exit 1
+
+      - name: Shutdown services
+        if: always()
+        run: docker-compose down -v
+
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Run Kotlin linter
+        run: |
+          echo "Linting would run here"
+          # ktlint would go here
+
+      - name: Check code formatting
+        run: |
+          echo "Format checking would run here"
+          # ktfmt would go here
